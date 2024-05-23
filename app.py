@@ -30,10 +30,40 @@ def count_predictions():
     count_1 = collection.count_documents({"prediction": 1})
     return jsonify({"prediction_0": count_0, "prediction_1": count_1})
 
+@app.route('/total_clients', methods=['GET'])
+def total_clients():
+    total = collection.count_documents({})
+    return jsonify({"total_clients": total})
+
 @app.route('/states', methods=['GET'])
 def get_states():
     states = collection.distinct("state")
     return jsonify(states)
+
+@app.route('/unsubscribing_rate', methods=['GET'])
+def unsubscribing_rate():
+    total_customers = collection.count_documents({})
+    unsubscribing_customers = collection.count_documents({"prediction": 1})
+    
+    if total_customers == 0:
+        return jsonify({"rate": 0})
+    
+    rate = (unsubscribing_customers / total_customers) * 100.0
+    rounded_rate = round(rate, 2)  # Round to two decimal places
+    return jsonify({"rate": rounded_rate})
+
+@app.route('/subscribing_rate', methods=['GET'])
+def subscribing_rate():
+    total_customers = collection.count_documents({})
+    subscribing_customers = collection.count_documents({"prediction": 0}) 
+    
+    if total_customers == 0:
+        return jsonify({"rate": 0})
+    
+    rate = (subscribing_customers / total_customers) * 100
+    rounded_rate = round(rate, 2)  # Round to two decimal places
+    return jsonify({"rate": rounded_rate})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
