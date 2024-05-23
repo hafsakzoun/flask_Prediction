@@ -3,33 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Test</title>
+    <title>Predictions Count by State</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>Data with Prediction Value 1</h1>
-    <div id="data1"></div>
-
-    <h1>Data with Prediction Value 0</h1>
-    <div id="data0"></div>
+    <canvas id="predictionsChart" width="800" height="400"></canvas>
 
     <script>
-        // Function to fetch data from the API and display it
-        function fetchData(apiEndpoint, targetElement) {
-            fetch(apiEndpoint)
-                .then(response => response.json())
-                .then(data => {
-                    // Convert data to HTML string
-                    const html = data.map(item => `<div>${JSON.stringify(item)}</div>`).join('');
-                    // Update the target element with the HTML
-                    document.getElementById(targetElement).innerHTML = html;
-                })
-                .catch(error => console.error('Error fetching data:', error));
-        }
+        // Fetch data from your API
+        fetch('/predictions_count_by_state')
+            .then(response => response.json())
+            .then(data => {
+                const labels = Object.keys(data);
+                const counts = Object.values(data);
 
-        // Call the function to fetch data for prediction value 1
-        fetchData('/data/1', 'data1');
-        // Call the function to fetch data for prediction value 0
-        fetchData('/data/0', 'data0');
+                // Draw chart
+                const ctx = document.getElementById('predictionsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Predictions Count by State',
+                            data: counts,
+                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
+                    }
+                });
+            });
     </script>
 </body>
 </html>

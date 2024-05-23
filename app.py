@@ -35,6 +35,11 @@ def total_clients():
     total = collection.count_documents({})
     return jsonify({"total_clients": total})
 
+@app.route('/staying_customers', methods=['GET'])
+def staying_customers():
+    staying = collection.count_documents({"prediction": 0})  # Assuming 0 represents staying customers
+    return jsonify({"staying": staying})
+
 @app.route('/states', methods=['GET'])
 def get_states():
     states = collection.distinct("state")
@@ -64,6 +69,59 @@ def subscribing_rate():
     rounded_rate = round(rate, 2)  # Round to two decimal places
     return jsonify({"rate": rounded_rate})
 
+@app.route('/churn_probabilities', methods=['GET'])
+def churn_probabilities():
+    data = list(collection.find({}, {"_id": 0, "probability": 1}))
+    probabilities = [item["probability"][1] for item in data]  # Assuming the second value is the churn probability
+    return jsonify(probabilities)
+
+@app.route('/churn_data', methods=['GET'])
+def churn_data():
+    data = list(collection.find({"prediction": 1}, {"_id": 0, "prediction": 1, "probability": 1}))
+    return jsonify(data)
+
+@app.route('/churn_data2', methods=['GET'])
+def churn_data2():
+    data = list(collection.find({"prediction": 0}, {"_id": 0, "prediction": 1, "probability": 1}))
+    return jsonify(data)
+
+@app.route('/rates', methods=['GET'])
+def get_rates():
+    total_customers = collection.count_documents({})
+    unsubscribing_customers = collection.count_documents({"prediction": 1})
+    subscribing_customers = collection.count_documents({"prediction": 0})
+    
+    if total_customers == 0:
+        unsubscribing_rate = 0
+        subscribing_rate = 0
+    else:
+        unsubscribing_rate = round((unsubscribing_customers / total_customers) * 100, 2)
+        subscribing_rate = round((subscribing_customers / total_customers) * 100, 2)
+    
+    return jsonify({
+        "subscribing_rate": subscribing_rate,
+        "unsubscribing_rate": unsubscribing_rate
+    })
+
+@app.route('/predictions_count_by_state', methods=['GET'])
+def predictions_count_by_state():
+    pipeline = [
+        {"$match": {"prediction": 1}},
+        {"$group": {"_id": "$state", "count": {"$sum": 1}}}
+    ]
+    result = list(collection.aggregate(pipeline))
+    predictions_by_state = {item['_id']: item['count'] for item in result}
+    return jsonify(predictions_by_state)
+
+@app.route('/predictions_count_by_state2', methods=['GET'])
+def predictions_count_by_state2():
+    pipeline = [
+        {"$match": {"prediction": 0}},
+        {"$group": {"_id": "$state", "count": {"$sum": 1}}}
+    ]
+    result = list(collection.aggregate(pipeline))
+    predictions_by_state = {item['_id']: item['count'] for item in result}
+    return jsonify(predictions_by_state)
 
 if __name__ == '__main__':
     app.run(debug=True)
