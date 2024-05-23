@@ -1,4 +1,11 @@
+
 # Prédiction de désabonnement des clients d’opérateur de Télécommunication en temps réel
+
+
+## Realiser par :                                                           En cadre par :
+Imane El Yahyaouy                                                           Yasyn EL YUSUFI 
+Akzoun Hafsa 
+Youssef Ouaaqa 
 
 ## Description du projet
 
