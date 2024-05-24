@@ -2,46 +2,98 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predictions Count by State</title>
+    <title>Churn Rate Analysis</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .chart-container {
+            width: 50%;
+            margin: auto;
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
-    <canvas id="predictionsChart" width="800" height="400"></canvas>
+    <h1>Churn Rate Analysis</h1>
+    
+    <div class="chart-container">
+        <canvas id="churnRateByCustomerServiceCalls"></canvas>
+    </div>
+    
+    <div class="chart-container">
+        <canvas id="churnRateByInternationalPlan"></canvas>
+    </div>
+    
+    <div class="chart-container">
+        <canvas id="churnRateByAccountLength"></canvas>
+    </div>
+    
+    <div class="chart-container">
+        <canvas id="churnRateByState"></canvas>
+    </div>
 
     <script>
-        // Fetch data from your API
-        fetch('/predictions_count_by_state')
-            .then(response => response.json())
-            .then(data => {
-                const labels = Object.keys(data);
-                const counts = Object.values(data);
-
-                // Draw chart
-                const ctx = document.getElementById('predictionsChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Predictions Count by State',
-                            data: counts,
-                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1
-                        }]
+        // Function to create chart
+        function createChart(ctx, labels, data, title) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Churn Rate (%)',
+                        data: data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     },
-                    options: {
-                        scales: {
-                            yAxes: [{
-                                ticks: {
-                                    beginAtZero: true
-                                }
-                            }]
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title
                         }
                     }
-                });
+                }
             });
+        }
+
+        // Fetch data and render chart for Churn Rate by Customer Service Calls
+        $.getJSON('/churn_rate_by_customer_service_calls', function(data) {
+            const labels = Object.keys(data);
+            const chartData = Object.values(data);
+            const ctx = document.getElementById('churnRateByCustomerServiceCalls').getContext('2d');
+            createChart(ctx, labels, chartData, 'Churn Rate by Customer Service Calls');
+        });
+
+        // Fetch data and render chart for Churn Rate by International Plan
+        $.getJSON('/churn_rate_by_international_plan', function(data) {
+            const labels = Object.keys(data);
+            const chartData = Object.values(data);
+            const ctx = document.getElementById('churnRateByInternationalPlan').getContext('2d');
+            createChart(ctx, labels, chartData, 'Churn Rate by International Plan');
+        });
+
+        // Fetch data and render chart for Churn Rate by Account Length
+        $.getJSON('/churn_rate_by_account_length', function(data) {
+            const labels = Object.keys(data);
+            const chartData = Object.values(data);
+            const ctx = document.getElementById('churnRateByAccountLength').getContext('2d');
+            createChart(ctx, labels, chartData, 'Churn Rate by Account Length');
+        });
+
+        // Fetch data and render chart for Churn Rate by State
+        $.getJSON('/churn_rate_by_state', function(data) {
+            const labels = Object.keys(data);
+            const chartData = Object.values(data);
+            const ctx = document.getElementById('churnRateByState').getContext('2d');
+            createChart(ctx, labels, chartData, 'Churn Rate by State');
+        });
     </script>
 </body>
 </html>

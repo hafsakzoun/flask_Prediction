@@ -123,5 +123,61 @@ def predictions_count_by_state2():
     predictions_by_state = {item['_id']: item['count'] for item in result}
     return jsonify(predictions_by_state)
 
+@app.route('/churn_rate_by_customer_service_calls', methods=['GET'])
+def churn_rate_by_customer_service_calls():
+    pipeline = [
+        {"$group": {
+            "_id": "$customer_service_calls",
+            "total": {"$sum": 1},
+            "churned": {"$sum": {"$cond": [{"$eq": ["$prediction", 1]}, 1, 0]}}
+        }},
+        {"$project": {
+            "churn_rate": {"$multiply": [{"$divide": ["$churned", "$total"]}, 100]}
+        }}
+    ]
+    result = list(collection.aggregate(pipeline))
+    churn_rate_by_service_calls = {item['_id']: round(item['churn_rate'], 2) for item in result}
+    return jsonify(churn_rate_by_service_calls)
+
+@app.route('/churn_rate_by_international_plan', methods=['GET'])
+def churn_rate_by_international_plan():
+    pipeline = [
+        {"$group": {
+            "_id": "$international_plan",
+            "total": {"$sum": 1},
+            "churned": {"$sum": {"$cond": [{"$eq": ["$prediction", 1]}, 1, 0]}}
+        }},
+        {"$project": {
+            "churn_rate": {"$multiply": [{"$divide": ["$churned", "$total"]}, 100]}
+        }}
+    ]
+    result = list(collection.aggregate(pipeline))
+    churn_rate_by_intl_plan = {item['_id']: round(item['churn_rate'], 2) for item in result}
+    return jsonify(churn_rate_by_intl_plan)
+
+@app.route('/churn_rate_by_account_length', methods=['GET'])
+def churn_rate_by_account_length():
+    pipeline = [
+        {"$bucketAuto": {
+            "groupBy": "$account_length",
+            "buckets": 10,  # Adjust the number of buckets as needed
+            "output": {
+                "total": {"$sum": 1},
+                "churned": {"$sum": {"$cond": [{"$eq": ["$prediction", 1]}, 1, 0]}},
+                "min_account_length": {"$min": "$account_length"},
+                "max_account_length": {"$max": "$account_length"}
+            }
+        }},
+        {"$project": {
+            "churn_rate": {"$multiply": [{"$divide": ["$churned", "$total"]}, 100]},
+            "range": {"$concat": [{"$toString": "$min_account_length"}, "-", {"$toString": "$max_account_length"}]}
+        }}
+    ]
+    result = list(collection.aggregate(pipeline))
+    churn_rate_by_account_length = {item['range']: round(item['churn_rate'], 2) for item in result}
+    return jsonify(churn_rate_by_account_length)
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
